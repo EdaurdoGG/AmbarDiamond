@@ -1,114 +1,106 @@
-
-
 DELIMITER $$
 
-CREATE TRIGGER AlertaBajaExistencia
+-- TRIGGER: Auditoría y alerta baja existencia de Producto
+CREATE TRIGGER ProductoAfterUpdate
 AFTER UPDATE ON Producto
 FOR EACH ROW
 BEGIN
-    IF NEW.Existencia < 10 AND OLD.Existencia >= 10 THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Alerta Baja Existencia', 'Existencia', OLD.Existencia, NEW.Existencia, @id_empleado_sesion);
-    END IF;
-END$$
+    DECLARE v_idEmpleado INT DEFAULT @id_empleado_sesion;
 
-CREATE TRIGGER VerificarVentaProducto
-BEFORE INSERT ON DetalleVenta
-FOR EACH ROW
-BEGIN
-    DECLARE existencia INT;
-    SELECT Existencia INTO existencia FROM Producto WHERE idProducto = NEW.idProducto;
-    IF existencia < NEW.Cantidad THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'No hay suficiente stock del producto para completar la venta.';
-    END IF;
-END$$
-
-CREATE TRIGGER ProductoUpdateAuditoria
-AFTER UPDATE ON Producto
-FOR EACH ROW
-BEGIN
+    -- Auditoría por cambios en columnas importantes
     IF NOT (NEW.Nombre <=> OLD.Nombre) THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Nombre', 'Nombre', OLD.Nombre, NEW.Nombre, @id_empleado_sesion);
+        INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Nombre', OLD.Nombre, NEW.Nombre, v_idEmpleado);
     END IF;
     IF NOT (NEW.CodigoBarra <=> OLD.CodigoBarra) THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion CodigoBarra', 'CodigoBarra', OLD.CodigoBarra, NEW.CodigoBarra, @id_empleado_sesion);
+        INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'CodigoBarra', OLD.CodigoBarra, NEW.CodigoBarra, v_idEmpleado);
     END IF;
     IF NOT (NEW.Existencia <=> OLD.Existencia) THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Existencia', 'Existencia', OLD.Existencia, NEW.Existencia, @id_empleado_sesion);
+        INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Existencia', OLD.Existencia, NEW.Existencia, v_idEmpleado);
+
+        -- Alerta de baja existencia (<10)
+        IF NEW.Existencia < 10 AND OLD.Existencia >= 10 THEN
+            INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+            VALUES ('Alerta Baja Existencia', 'Existencia', OLD.Existencia, NEW.Existencia, v_idEmpleado);
+        END IF;
     END IF;
     IF NOT (NEW.PrecioCompra <=> OLD.PrecioCompra) THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion PrecioCompra', 'PrecioCompra', OLD.PrecioCompra, NEW.PrecioCompra, @id_empleado_sesion);
+        INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'PrecioCompra', OLD.PrecioCompra, NEW.PrecioCompra, v_idEmpleado);
     END IF;
     IF NOT (NEW.PrecioVenta <=> OLD.PrecioVenta) THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion PrecioVenta', 'PrecioVenta', OLD.PrecioVenta, NEW.PrecioVenta, @id_empleado_sesion);
+        INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'PrecioVenta', OLD.PrecioVenta, NEW.PrecioVenta, v_idEmpleado);
     END IF;
     IF NOT (NEW.idCategoria <=> OLD.idCategoria) THEN
-        INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Categoria', 'idCategoria', OLD.idCategoria, NEW.idCategoria, @id_empleado_sesion);
+        INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'idCategoria', OLD.idCategoria, NEW.idCategoria, v_idEmpleado);
     END IF;
-END$$
+END $$
 
-CREATE TRIGGER ProductoInsertAuditoria
+-- TRIGGER: Auditoría al insertar un Producto
+CREATE TRIGGER ProductoAfterInsert
 AFTER INSERT ON Producto
 FOR EACH ROW
 BEGIN
-    INSERT INTO AuditoriaProducto (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+    INSERT INTO AuditoriaProducto(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
     VALUES ('Creacion', 'Nombre', NULL, NEW.Nombre, @id_empleado_sesion);
-END$$
+END $$
 
-CREATE TRIGGER PersonaUpdateAuditoria
+-- TRIGGER: Auditoría al actualizar Persona
+CREATE TRIGGER PersonaAfterUpdate
 AFTER UPDATE ON Persona
 FOR EACH ROW
 BEGIN
+    DECLARE v_idEmpleado INT DEFAULT @id_empleado_sesion;
+
     IF NOT (NEW.Nombre <=> OLD.Nombre) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Nombre', 'Nombre', OLD.Nombre, NEW.Nombre, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Nombre', OLD.Nombre, NEW.Nombre, v_idEmpleado);
     END IF;
     IF NOT (NEW.ApellidoPaterno <=> OLD.ApellidoPaterno) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion ApellidoPaterno', 'ApellidoPaterno', OLD.ApellidoPaterno, NEW.ApellidoPaterno, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'ApellidoPaterno', OLD.ApellidoPaterno, NEW.ApellidoPaterno, v_idEmpleado);
     END IF;
     IF NOT (NEW.ApellidoMaterno <=> OLD.ApellidoMaterno) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion ApellidoMaterno', 'ApellidoMaterno', OLD.ApellidoMaterno, NEW.ApellidoMaterno, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'ApellidoMaterno', OLD.ApellidoMaterno, NEW.ApellidoMaterno, v_idEmpleado);
     END IF;
     IF NOT (NEW.Telefono <=> OLD.Telefono) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Telefono', 'Telefono', OLD.Telefono, NEW.Telefono, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Telefono', OLD.Telefono, NEW.Telefono, v_idEmpleado);
     END IF;
     IF NOT (NEW.Email <=> OLD.Email) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Email', 'Email', OLD.Email, NEW.Email, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Email', OLD.Email, NEW.Email, v_idEmpleado);
     END IF;
     IF NOT (NEW.Edad <=> OLD.Edad) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Edad', 'Edad', OLD.Edad, NEW.Edad, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Edad', OLD.Edad, NEW.Edad, v_idEmpleado);
     END IF;
     IF NOT (NEW.Sexo <=> OLD.Sexo) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Sexo', 'Sexo', OLD.Sexo, NEW.Sexo, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Sexo', OLD.Sexo, NEW.Sexo, v_idEmpleado);
     END IF;
     IF NOT (NEW.Estatus <=> OLD.Estatus) THEN
-        INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-        VALUES ('Modificacion Estatus', 'Estatus', OLD.Estatus, NEW.Estatus, @id_empleado_sesion);
+        INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+        VALUES ('Modificacion', 'Estatus', OLD.Estatus, NEW.Estatus, v_idEmpleado);
     END IF;
-END$$
+END $$
 
-CREATE TRIGGER PersonaInsertAuditoria
+-- TRIGGER: Auditoría al insertar Persona
+CREATE TRIGGER PersonaAfterInsert
 AFTER INSERT ON Persona
 FOR EACH ROW
 BEGIN
-    INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
+    INSERT INTO AuditoriaPersona(Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
     VALUES ('Creacion', 'Nombre', NULL, NEW.Nombre, @id_empleado_sesion);
-END$$
+END $$
 
-CREATE TRIGGER VentaCantidadBefore
+-- TRIGGER: Control de stock antes de insertar DetalleVenta
+CREATE TRIGGER DetalleVentaBeforeInsert
 BEFORE INSERT ON DetalleVenta
 FOR EACH ROW
 BEGIN
@@ -118,35 +110,38 @@ BEGIN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'No se puede vender más de lo disponible en stock.';
     END IF;
-END$$
+END $$
 
-CREATE TRIGGER ProcesarVentaAlEnviar
+-- TRIGGER: Procesar venta automáticamente al atender pedido
+CREATE TRIGGER PedidoAfterUpdate
 AFTER UPDATE ON Pedido
 FOR EACH ROW
 BEGIN
     IF NEW.Estatus = 'Atendido' AND OLD.Estatus <> 'Atendido' THEN
-        CALL ProcesarVentaDePedido(NEW.idPedido);
+        CALL ProcesarVentaPedido(NEW.idPedido);
     END IF;
-END$$
+END $$
 
-CREATE TRIGGER AuditoriaLogin
-AFTER INSERT ON Persona
-FOR EACH ROW
-BEGIN
-    -- Ejemplo: registrar creación de login en auditoría
-    INSERT INTO AuditoriaPersona (Movimiento, ColumnaAfectada, DatoAnterior, DatoNuevo, idPersona)
-    VALUES ('LoginCreado', 'Usuario', NULL, NEW.Usuario, NEW.idPersona);
-END$$
-
-CREATE TRIGGER ActualizarFinanzasEnVentas
+-- TRIGGER: Actualizar Finanzas automáticamente tras venta
+CREATE TRIGGER VentaAfterInsert
 AFTER INSERT ON Venta
 FOR EACH ROW
 BEGIN
     INSERT INTO Finanzas (idVenta, TotalVenta, TotalInvertido)
     VALUES (NEW.idVenta, NEW.MontoTotal, 
-        (SELECT SUM(PrecioCompra * Cantidad) 
+        (SELECT IFNULL(SUM(PrecioUnitario * Cantidad),0) 
          FROM DetalleVenta 
          WHERE idVenta = NEW.idVenta));
-END$$
+END $$
+
+-- Auditoría al crear una devolución
+CREATE TRIGGER DevolucionAfterInsert
+AFTER INSERT ON Devolucion
+FOR EACH ROW
+BEGIN
+    -- Registrar en la auditoría que se creó una devolución
+    INSERT INTO AuditoriaDevolucion(Movimiento,ColumnaAfectada,DatoAnterior,DatoNuevo,idPersona)
+    VALUES ('Creacion Devolucion','Motivo',NULL,NEW.Motivo,@id_empleado_sesion );
+END $$
 
 DELIMITER ;

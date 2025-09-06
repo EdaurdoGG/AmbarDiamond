@@ -75,7 +75,7 @@ CREATE TABLE Venta (
     Subtotal DECIMAL(10,2) NOT NULL,
     IVA DECIMAL(10,2) NOT NULL,
     MontoTotal DECIMAL(10,2) NOT NULL,
-    TipoPago ENUM('Efectivo','Tarjeta','Transferencia','QR') NOT NULL,
+    TipoPago ENUM('Efectivo','Tarjeta') NOT NULL,
     Estatus ENUM('Activa','Cancelada','Devuelta') DEFAULT 'Activa',
     idPersona INT NOT NULL,
     FOREIGN KEY (idPersona) REFERENCES Persona(idPersona)
@@ -162,6 +162,18 @@ CREATE TABLE DetalleDevolucion (
         ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE AuditoriaDevolucion (
+    idAuditoriaDevolucion INT AUTO_INCREMENT PRIMARY KEY,
+    Movimiento VARCHAR(50) NOT NULL,        
+    ColumnaAfectada VARCHAR(100),           
+    DatoAnterior TEXT,                      
+    DatoNuevo TEXT,                         
+    Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    idPersona INT,                          
+    FOREIGN KEY (idPersona) REFERENCES Persona(idPersona)
+        ON UPDATE CASCADE ON DELETE SET NULL
+);
+
 CREATE TABLE Finanzas (
     idFinanzas INT AUTO_INCREMENT PRIMARY KEY,
     idVenta INT NOT NULL UNIQUE,
@@ -169,5 +181,15 @@ CREATE TABLE Finanzas (
     TotalInvertido DECIMAL(10,2) NOT NULL,
     Ganancia DECIMAL(10,2) GENERATED ALWAYS AS (TotalVenta - TotalInvertido) STORED,
     FOREIGN KEY (idVenta) REFERENCES Venta(idVenta)
+        ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE SugerenciaQueja (
+    idSugerenciaQueja INT AUTO_INCREMENT PRIMARY KEY,
+    idPersona INT NOT NULL,
+    Tipo ENUM('Sugerencia','Queja') NOT NULL,
+    Descripcion VARCHAR(255) NOT NULL,
+    Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (idPersona) REFERENCES Persona(idPersona)
         ON UPDATE CASCADE ON DELETE CASCADE
 );

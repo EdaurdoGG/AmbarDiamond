@@ -104,8 +104,16 @@ SELECT
     pe.idPedido,
     pe.Fecha,
     pe.Estatus,
-    pe.idPersona AS idCliente
+    pe.idPersona AS idCliente,
+    dp.idDetallePedido,
+    dp.idProducto,
+    p.Nombre AS Producto,
+    dp.Cantidad,
+    dp.PrecioUnitario,
+    dp.Total
 FROM Pedido pe
+JOIN DetallePedido dp ON pe.idPedido = dp.idPedido
+JOIN Producto p ON dp.idProducto = p.idProducto
 WHERE pe.Estatus = 'Pendiente';
 
 CREATE OR REPLACE VIEW PedidosAtendidos AS
@@ -113,8 +121,16 @@ SELECT
     pe.idPedido,
     pe.Fecha,
     pe.Estatus,
-    pe.idPersona AS idCliente
+    pe.idPersona AS idCliente,
+    dp.idDetallePedido,
+    dp.idProducto,
+    p.Nombre AS Producto,
+    dp.Cantidad,
+    dp.PrecioUnitario,
+    dp.Total
 FROM Pedido pe
+JOIN DetallePedido dp ON pe.idPedido = dp.idPedido
+JOIN Producto p ON dp.idProducto = p.idProducto
 WHERE pe.Estatus = 'Atendido';
 
 CREATE OR REPLACE VIEW PedidosCancelados AS
@@ -122,8 +138,16 @@ SELECT
     pe.idPedido,
     pe.Fecha,
     pe.Estatus,
-    pe.idPersona AS idCliente
+    pe.idPersona AS idCliente,
+    dp.idDetallePedido,
+    dp.idProducto,
+    p.Nombre AS Producto,
+    dp.Cantidad,
+    dp.PrecioUnitario,
+    dp.Total
 FROM Pedido pe
+JOIN DetallePedido dp ON pe.idPedido = dp.idPedido
+JOIN Producto p ON dp.idProducto = p.idProducto
 WHERE pe.Estatus = 'Cancelado';
 
 CREATE OR REPLACE VIEW DevolucionesRealizadas AS
