@@ -235,4 +235,3 @@ JOIN Persona per ON c.idPersona = per.idPersona
 JOIN DetalleCarrito dc ON c.idCarrito = dc.idCarrito
 JOIN Producto p ON dc.idProducto = p.idProducto;
 
-
