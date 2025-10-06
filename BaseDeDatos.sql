@@ -20,6 +20,7 @@ CREATE TABLE Persona (
     Estatus ENUM('Activo','Inactivo') DEFAULT 'Activo',
     Usuario VARCHAR(50) UNIQUE NOT NULL,
     Contrasena VARCHAR(255) NOT NULL,
+    Imagen VARCHAR(255) NULL,
     idRol INT NOT NULL,
     FOREIGN KEY (idRol) REFERENCES Rol(idRol)
         ON UPDATE CASCADE ON DELETE RESTRICT
@@ -192,4 +193,21 @@ CREATE TABLE SugerenciaQueja (
     Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (idPersona) REFERENCES Persona(idPersona)
         ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+-- Insertar los roles y el primer usuario administrador
+-- Este paso debe realizarse **después de crear las tablas** pero **antes de definir triggers, vistas y procedimientos almacenados**, 
+-- para asegurar que los triggers que dependen de roles o del primer usuario no generen errores.
+
+INSERT INTO Rol (NombreRol, Descripcion)
+VALUES 
+    ('Administrador', 'Usuario con todos los permisos del sistema'),
+    ('Empleado', 'Usuario con permisos limitados para operaciones diarias'),
+    ('Usuario', 'Cliente o usuario final sin permisos administrativos');
+
+INSERT INTO Persona (
+    Nombre, ApellidoPaterno, ApellidoMaterno, Telefono, Email, Edad, Sexo, Estatus, Usuario, Contrasena, idRol
+)
+VALUES (
+    'Reyna', 'Guzman', 'Yepez', '1112223344', 'admin@ambar.com', 30, 'F', 'Activo', 'admin', 'admin123', 1
 );

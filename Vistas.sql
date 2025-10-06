@@ -1,3 +1,6 @@
+-- =========================================
+-- 1️⃣ VENTAS
+-- =========================================
 CREATE OR REPLACE VIEW VentasDiariasPorEmpleado AS
 SELECT 
     v.idVenta AS NumeroVenta,
@@ -19,6 +22,9 @@ JOIN Producto p ON dv.idProducto = p.idProducto
 JOIN Persona emp ON v.idPersona = emp.idPersona AND emp.idRol = 2  -- Empleado
 JOIN Persona cli ON v.idPersona = cli.idPersona AND cli.idRol = 3; -- Cliente
 
+-- =========================================
+-- 2️⃣ EMPLEADOS
+-- =========================================
 CREATE OR REPLACE VIEW EmpleadosActivos AS
 SELECT 
     p.idPersona AS idEmpleado,
@@ -49,6 +55,9 @@ SELECT
 FROM Persona p
 WHERE p.Estatus = 'Inactivo' AND p.idRol = 2;
 
+-- =========================================
+-- 3️⃣ PRODUCTOS
+-- =========================================
 CREATE OR REPLACE VIEW ProductosActivos AS
 SELECT 
     p.idProducto,
@@ -75,6 +84,9 @@ JOIN Categoria c ON p.idCategoria = c.idCategoria
 WHERE p.Existencia = 0
 ORDER BY p.Nombre;
 
+-- =========================================
+-- 4️⃣ CLIENTES
+-- =========================================
 CREATE OR REPLACE VIEW ClientesRegistrados AS
 SELECT 
     p.idPersona AS idCliente,
@@ -99,6 +111,9 @@ SELECT
 FROM Persona p
 WHERE p.Estatus = 'Inactivo' AND p.idRol = 3;
 
+-- =========================================
+-- 5️⃣ PEDIDOS
+-- =========================================
 CREATE OR REPLACE VIEW PedidosPendientes AS
 SELECT 
     pe.idPedido,
@@ -150,6 +165,9 @@ JOIN DetallePedido dp ON pe.idPedido = dp.idPedido
 JOIN Producto p ON dp.idProducto = p.idProducto
 WHERE pe.Estatus = 'Cancelado';
 
+-- =========================================
+-- 6️⃣ DEVOLUCIONES
+-- =========================================
 CREATE OR REPLACE VIEW DevolucionesRealizadas AS
 SELECT 
     d.idDevolucion,
@@ -166,6 +184,9 @@ JOIN DetalleDevolucion dd ON d.idDevolucion = dd.idDevolucion
 JOIN DetalleVenta dv ON dd.idDetalleVenta = dv.idDetalleVenta
 JOIN Producto p ON dv.idProducto = p.idProducto;
 
+-- =========================================
+-- 7️⃣ AUDITORÍAS / HISTORIAL
+-- =========================================
 CREATE OR REPLACE VIEW HistorialModificacionesPersonas AS
 SELECT 
     h.idAuditoriaPersona AS idHistorial,
@@ -181,7 +202,7 @@ FROM AuditoriaPersona h
 LEFT JOIN Persona p ON h.idPersona = p.idPersona
 LEFT JOIN Rol r ON p.idRol = r.idRol;
 
-CREATE OR REPLACE VIEW HistorialModificacionesProductos AS
+CREATE OR REPLACE VIEW HistorialModificacionesProductos AS
 SELECT 
     h.idAuditoriaProducto AS idHistorial,
     h.Movimiento,
@@ -196,6 +217,9 @@ FROM AuditoriaProducto h
 LEFT JOIN Persona p ON h.idPersona = p.idPersona
 LEFT JOIN Rol r ON p.idRol = r.idRol;
 
+-- =========================================
+-- 8️⃣ CARRITO
+-- =========================================
 CREATE OR REPLACE VIEW VistaCarritoPorPersona AS
 SELECT 
     c.idCarrito,
