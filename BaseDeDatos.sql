@@ -100,6 +100,7 @@ CREATE TABLE DetalleVenta (
 CREATE TABLE Carrito (
     idCarrito INT AUTO_INCREMENT PRIMARY KEY,
     idPersona INT NOT NULL,
+    FechaCreacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (idPersona) REFERENCES Persona(idPersona)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
@@ -108,9 +109,11 @@ CREATE TABLE DetalleCarrito (
     idDetalleCarrito INT AUTO_INCREMENT PRIMARY KEY,
     idCarrito INT NOT NULL,
     idProducto INT NOT NULL,
+    NombreProducto VARCHAR(150) NOT NULL,
+    ImagenProducto VARCHAR(255), -- ruta o URL de la imagen del producto
     Cantidad INT NOT NULL CHECK (Cantidad > 0),
     PrecioUnitario DECIMAL(10,2) NOT NULL,
-    Total DECIMAL(10,2) NOT NULL,
+    Total DECIMAL(10,2) GENERATED ALWAYS AS (Cantidad * PrecioUnitario) STORED,
     FOREIGN KEY (idCarrito) REFERENCES Carrito(idCarrito)
         ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (idProducto) REFERENCES Producto(idProducto)
